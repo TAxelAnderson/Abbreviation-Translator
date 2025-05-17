@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Translator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-size: 1rem;
+      overflow-x: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background-color: rgb(20, 20, 20);
+    }
+
+    textarea {
+      resize: none;
+      margin-bottom: 50px;
+      width: 40vw;
+      height: 30vh;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: black;
+      color: white;
+      padding: 20px;
+      font-size: 25px;
+    }
+
+    textarea:focus {
+      outline: none;
+    }
+
+    #english {
+      font-size: 25px;
+      color: white;
+      padding: 20px;
+      width: 40vw;
+      height: 30vh;
+      background: black;
+      border: 1px solid white;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    #meter {
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 50px;
+      margin-bottom: 50px;
+      width: 410px;
+      height: 85px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #meter p {
+      color: white;
+    }
+
+    #meter button {
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 15px;
+      border: none;
+      text-align: center;
+    }
+
+    #meter-meter {
+      height: 20px;
+      width: 400px;
+      border-radius: 10px;
+      background-color: rgb(100, 100, 100);
+      overflow: hidden;
+    }
+
+    #meter-fill {
+      height: 100%;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="meter">
+    <p>Meter of Laziness</p>
+    <button onclick="resetMeter()">Reset Meter</button>
+    <div id="meter-meter">
+      <div id="meter-fill"></div>
+    </div>
+    </div>
+    <div id="container">
+      <textarea placeholder="Type here..." name="gibberish" id="gibberish" rows="10" cols="80"></textarea>
+      <p id="english">Normal people talk here...</p>
+    </div>
+  </main>
+  <script type="text/javascript">
+    const gibberish = document.getElementById("gibberish");
+    const englishText = document.getElementById("english");
+
+    gibberish.addEventListener("input", translate);
+
+    let meterSeverity = 0
+
+    let usedAbbreviations = []
+
+    const abbreviations = [
+    {
+      short: "smh",
+      actual: "shaking my head",
+      severity: "medium"
+    },
+    {
+      short: "fomo",
+      actual: "the fear of missing out",
+      severity: "heavy"
+    },
+    {
+      short: "iykyk",
+      actual: "if you know you know",
+      severity: "heavy"
+    },
+    {
+      short: "ofc",
+      actual: "of course",
+      severity: "light"
+    },
+    {
+      short: "tldr",
+      actual: "too long, didn't read",
+      severity: "medium"
+    },
+    {
+      short: "eta",
+      actual: "estimated time of arrival",
+      severity: "very light"
+    },
+    {
+      short: "hmu",
+      actual: "hit me up",
+      severity: "heavy"
+    },
+    {
+      short: "lmg",
+      actual: "let's go",
+      severity: "heavy"
+    },
+    {
+      short: "atp",
+      actual: "answer the phone",
+      severity: "medium"
+    },
+    {
+      short: "imo",
+      actual: "in my opinion",
+      severity: "medium"
+    },
+    {
+      short: "ngl",
+      actual: "not going to lie",
+      severity: "medium"
+    },
+    {
+      short: "tbh",
+      actual: "to be honest",
+      severity: "light"
+    },
+    {
+      short: "yolo",
+      actual: "you only live once",
+      severity: "medium"
+    },
+    {
+      short: "iirc",
+      actual: "if I recall correctly",
+      severity: "medium"
+    },
+    {
+      short: "mbn",
+      actual: "must be nice",
+      severity: "medium"
+    },
+    {
+      short: "og",
+      actual: "old school",
+      severity: "light"
+    },
+    {
+      short: "tfw",
+      actual: "that feeling when",
+      severity: "medium"
+    },
+    {
+      short: "ftw",
+      actual: "for the win",
+      severity: "medium"
+    },
+    {
+      short: "fwiw",
+      actual: "for what its worth",
+      severity: "heavy"
+    },
+    {
+      short: "lmk",
+      actual: "let me know",
+      severity: "medium"
+    },
+    {
+      short: "ootd",
+      actual: "outfit of the day",
+      severity: "heavy"
+    },
+    {
+      short: "ttyl",
+      actual: "talk to you later",
+      severity: "medium"
+    },
+    {
+      short: "wsg",
+      actual: "what''s good",
+      severity: "heavy"
+    },
+    {
+      short: "wtm",
+      actual: "whats the matter",
+      severity: "medium"
+    },
+    {
+      short: "wtv",
+      actual: "whatever",
+      severity: "medium"
+    },
+    {
+      short: "wtw",
+      actual: "what's the word'",
+      severity: "heavy"
+    },
+    {
+      short: "bsf",
+      actual: "best friend",
+      severity: "medium"
+    },
+    {
+      short: "dba",
+      actual: "don't bother asking'",
+      severity: "medium"
+    },
+    {
+      short: "goat",
+      actual: "greatest of all time",
+      severity: "light"
+    },
+    {
+      short: "grwm",
+      actual: "get ready with me",
+      severity: "heavy"
+    },
+    {
+      short: "icymi",
+      actual: "in case you missed it",
+      severity: "heavy"
+    },
+    {
+      short: "irl",
+      actual: "in real life",
+      severity: "light"
+    },
+    {
+      short: "tbd",
+      actual: "to be determined",
+      severity: "medium"
+    },
+    {
+      short: "bbl",
+      actual: "be back later",
+      severity: "heavy"
+    },
+    {
+      short: "brb",
+      actual: "be right back",
+      severity: "light"
+    },
+    {
+      short: "wsp",
+      actual: "what's up'",
+      severity: "medium"
+    },
+    {
+      short: "wya",
+      actual: "where are you at",
+      severity: "medium"
+    },
+    {
+      short: "wym",
+      actual: "what do you mean",
+      severity: "light"
+    },
+    {
+      short: "bts",
+      actual: "be there soon",
+      severity: "medium"
+    },
+    {
+      short: "dw",
+      actual: "don't worry'",
+      severity: "medium"
+    },
+    {
+      short: "fs",
+      actual: "for sure",
+      severity: "light"
+    },
+    {
+      short: "gts",
+      actual: "go to sleep",
+      severity: "heavy"
+    },
+    {
+      short: "ikr",
+      actual: "i know right",
+      severity: "light"
+    },
+    {
+      short: "imy",
+      actual: "I miss you",
+      severity: "medium"
+    },
+    {
+      short: "nbd",
+      actual: "no big deal",
+      severity: "medium"
+    },
+    {
+      short: "rofl",
+      actual: "rolling on the floor laughing",
+      severity: "heavy"
+    },
+    {
+      short: "tfti",
+      actual: "thanks for the invite",
+      severity: "medium"
+    },
+    {
+      short: "tlc",
+      actual: "tender loving care",
+      severity: "heavy"
+    },
+    {
+      short: "tmi",
+      actual: "too much information",
+      severity: "medium"
+    },
+    {
+      short: "ttm",
+      actual: "talk to me",
+      severity: "medium"
+    },
+    {
+      short: "eod",
+      actual: "end of discussion / day",
+      severity: "heavy"
+    },
+    {
+      short: "nvm",
+      actual: "never mind",
+      severity: "medium"
+    },
+    {
+      short: "atm",
+      actual: "at the moment",
+      severity: "medium"
+    },
+    {
+      short: "btw",
+      actual: "by the way",
+      severity: "light"
+    },
+    {
+      short: "dtm",
+      actual: "doing too much",
+      severity: "heavy"
+    },
+    {
+      short: "hbu",
+      actual: "how about you",
+      severity: "medium"
+    },
+    {
+      short: "idk",
+      actual: "i don't know'",
+      severity: "light"
+    },
+    {
+      short: "ion",
+      actual: "in other news",
+      severity: "medium"
+    },
+    {
+      short: "lol",
+      actual: "laugh out loud",
+      severity: "light"
+    },
+    {
+      short: "mbn",
+      actual: "must be nice",
+      severity: "medium"
+    },
+    {
+      short: "sop",
+      actual: "soppy / overemotional",
+      severity: "heavy"
+    },
+    {
+      short: "tba",
+      actual: "to be announced",
+      severity: "medium"
+    },
+    {
+      short: "tbt",
+      actual: "throwback thursday",
+      severity: "very heavy"
+    },
+    {
+      short: "wbu",
+      actual: "what about you",
+      severity: "light"
+    },
+    {
+      short: "wdym",
+      actual: "what do you mean",
+      severity: "light"
+    },
+    {
+      short: "y2k",
+      actual: "you're too kind'",
+      severity: "medium"
+    },
+    {
+      short: "yh",
+      actual: "yeah",
+      severity: "very heavy"
+    },
+    {
+      short: "yw",
+      actual: "you're welcome'",
+      severity: "medium"
+    },
+    {
+      short: "ama",
+      actual: "ask me anything",
+      severity: "medium"
+    },
+    {
+      short: "byob",
+      actual: "bring your own beverage",
+      severity: "very heavy"
+    },
+    {
+      short: "esp",
+      actual: "especially",
+      severity: "medium"
+    },
+    {
+      short: "gyat",
+      actual: "get your act together",
+      severity: "heavy"
+    },
+    {
+      short: "hodl",
+      actual: "hold on for dear life",
+      severity: "very heavy"
+    },
+    {
+      short: "hru",
+      actual: "how are you",
+      severity: "medium"
+    },
+    {
+      short: "imho",
+      actual: "in my humble opinion",
+      severity: "medium"
+    },
+    {
+      short: "imk",
+      actual: "in my knowledge",
+      severity: "heavy"
+    },
+    {
+      short: "mb",
+      actual: "my bad",
+      severity: "light"
+    },
+    {
+      short: "mfw",
+      actual: "my face when",
+      severity: "very heavy"
+    },
+    {
+      short: "ntm",
+      actual: "not too much",
+      severity: "medium"
+    },
+    {
+      short: "otw",
+      actual: "on my way",
+      severity: "medium"
+    },
+    {
+      short: "ppd",
+      actual: "postponed",
+      severity: "heavy"
+    },
+    {
+      short: "xd",
+      actual: "(laughing emoticon)",
+      severity: "medium"
+    },
+    {
+      short: ":3",
+      actual: "(coy smile emoticon)",
+      severity: "heavy"
+    },
+    {
+      short: "afaik",
+      actual: "as far as I know",
+      severity: "medium"
+    },
+    {
+      short: "bff",
+      actual: "best friend(s) forever",
+      severity: "light"
+    },
+    {
+      short: "dl",
+      actual: "down low (keep a secret)",
+      severity: "very light"
+    },
+    {
+      short: "dnc",
+      actual: "do not care",
+      severity: "light"
+    },
+    {
+      short: "dts",
+      actual: "don't think so'",
+      severity: "medium"
+    },
+    {
+      short: "jk",
+      actual: "just kidding",
+      severity: "light"
+    },
+    {
+      short: "bc",
+      actual: "because",
+      severity: "very light"
+    },
+    {
+      short: "tysm",
+      actual: "thank you so much",
+      severity: "light"
+    },
+    {
+      short: "np",
+      actual: "no problem",
+      severity: "medium"
+    },
+    {
+      short: "hbd",
+      actual: "happy birthday",
+      severity: "medium"
+    },
+    {
+      short: "gm",
+      actual: "good morning",
+      severity: "medium"
+    },
+    {
+      short: "gn",
+      actual: "good night",
+      severity: "medium"
+    },
+    {
+      short: "tmr",
+      actual: "tomorrow",
+      severity: "medium"
+    },
+    {
+      short: "vsf",
+      actual: "very sad face",
+      severity: "heavy"
+    },
+    {
+      short: "time",
+      actual: "tears in my eyes",
+      severity: "heavy"
+    },
+    {
+      short: "gg",
+      actual: "good game",
+      severity: "light"
+    },
+    {
+      short: "orly",
+      actual: "oh really",
+      severity: "medium"
+    },
+    {
+      short: "h8",
+      actual: "hate",
+      severity: "heavy"
+    },
+    {
+      short: "ruok",
+      actual: "are you ok",
+      severity: "medium"
+    },
+    {
+      short: "mirl",
+      actual: "meet in real life",
+      severity: "heavy"
+    },
+    {
+      short: "wb",
+      actual: "welcome back",
+      severity: "medium"
+    },
+    {
+      short: "rak",
+      actual: "random act of kindness",
+      severity: "medium"
+    },
+    {
+      short: "lsr",
+      actual: "loser",
+      severity: "medium"
+    },
+    {
+      short: "l",
+      actual: "loser",
+      severity: "light"
+    },
+    {
+      short: "mos",
+      actual: "mom over shoulder",
+      severity: "medium"
+    },
+    {
+      short: "lmao",
+      actual: "laughing my butt off",
+      severity: "medium"
+    },
+    {
+      short: "fomo",
+      actual: "fear of missing out",
+      severity: "medium"
+    },
+    {
+      short: "nagi",
+      actual: "not a good idea",
+      severity: "heavy"
+    },
+    {
+      short: "iu2u",
+      actual: "it's up to you'",
+      severity: "medium"
+    },
+    {
+      short: "oic",
+      actual: "oh I see",
+      severity: "medium"
+    },
+    {
+      short: "j4f",
+      actual: "just for fun",
+      severity: "heavy"
+    },
+    {
+      short: "tbc",
+      actual: "to be continued",
+      severity: "medium"
+    },
+    {
+      short: "fyi",
+      actual: "for your information",
+      severity: "light"
+    }, 
+    {
+      short: "iykwim",
+      actual: "if you know what I mean",
+      severity: "medium"
+    }
+  ]
+
+    function translate() {
+      let translatedText = gibberish.value;
+
+      abbreviations.forEach((item) => {
+        if (gibberish.value.includes(item.short)) {
+          const regex = new RegExp(`\\b${item.short}\\b`, 'gi');
+          translatedText = translatedText.replace(regex, item.actual);
+          
+          if (!usedAbbreviations.includes(item.short)) {
+            increaseSeverity(item.severity)
+            usedAbbreviations.push(item.short)
+          }
+        }
+      });
+
+      englishText.textContent = translatedText;
+    }
+
+    function increaseSeverity(severity) {
+      if (severity == "light") {
+        meterSeverity += 15
+      } else if (severity == "medium") {
+        meterSeverity += 25
+      } else if (severity == "heavy") {
+        meterSeverity += 35
+      } else if (severity == "very light") {
+        meterSeverity += 10
+      } else if (severity == "very heavy") {
+        meterSeverity += 45
+      }
+
+      document.getElementById("meter-fill").style.width = `${meterSeverity}%`;
+      if (meterSeverity <= 25) {
+        document.getElementById("meter-fill").style.backgroundColor = "green"
+      } else if (meterSeverity <= 50) {
+        document.getElementById("meter-fill").style.backgroundColor = "yellow"
+      } else if (meterSeverity <= 75) {
+        document.getElementById("meter-fill").style.backgroundColor = "orange"
+      } else if (meterSeverity <= 99) {
+        document.getElementById("meter-fill").style.backgroundColor = "red"
+      } else {
+        document.getElementById("meter-fill").style.backgroundColor = "#8b0000"
+      }
+    }
+
+    function resetMeter() {
+      window.location.href = "translator.html"
+    }
+  </script>
+</body>
+</html>
